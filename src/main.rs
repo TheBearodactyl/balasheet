@@ -43,6 +43,7 @@ enum Subcommands {
         #[arg(short = 's', long = "scale")]
         scale_factor: f32,
     },
+    /// Create a new spritesheet
     New {
         /// Width of each tile in pixels
         #[arg(short = 'w', long = "tile-width", default_value = "144")]
@@ -204,7 +205,8 @@ fn new_sheet(
     let total_width = tile_width * columns;
     let total_height = tile_height * rows;
 
-    let img: RgbaImage = ImageBuffer::from_fn(total_width, total_height, |_, _| Rgba([0, 0, 0, 0]));
+    let img: RgbaImage =
+        ImageBuffer::from_fn(total_width, total_height, |_, _| Rgba([255, 255, 255, 255]));
 
     img.save(output_path)?;
 
@@ -255,12 +257,32 @@ fn main() -> anyhow::Result<()> {
             columns,
             rows,
             path: output_image,
-        } => new_sheet(
-            tile_width,
-            tile_height,
-            columns,
-            rows,
-            output_image.as_str(),
-        ),
+        } => {
+            new_sheet(
+                tile_width,
+                tile_height,
+                columns,
+                rows,
+                output_image.as_str(),
+            )?;
+
+            if !Path::new(&output_image).exists() {
+                std::process::exit(1);
+            }
+
+            let path = Path::new(&output_image);
+
+            match process_image(&output_image, tile_width, tile_height, 10) {
+                Ok(result) => {
+                    result.save(&path)?;
+                    println!("[SUCCESS]: Saved to '{}'", output_image);
+                    Ok(())
+                }
+                Err(e) => {
+                    eprintln!("[ERROR]: Failed to process image: {}", e);
+                    std::process::exit(1);
+                }
+            }
+        }
     }
 }
