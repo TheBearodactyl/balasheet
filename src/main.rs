@@ -5,6 +5,9 @@ use image::{DynamicImage, GenericImageView, ImageBuffer, Rgba, RgbaImage};
 
 #[derive(Parser)]
 struct Cli {
+    #[arg(short, long, hide = true)]
+    gen_docs: bool,
+
     #[command(subcommand)]
     command: Subcommands,
 }
@@ -215,6 +218,11 @@ fn new_sheet(
 
 fn main() -> anyhow::Result<()> {
     let argv = Cli::parse();
+
+    if argv.gen_docs {
+        println!("{}", clap_markdown::help_markdown::<Cli>());
+        return Ok(());
+    }
 
     match argv.command {
         Subcommands::RoundCorners {
